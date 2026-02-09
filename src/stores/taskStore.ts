@@ -121,7 +121,6 @@ const useTaskStore = create<TaskState>((set, get) => ({
       `/boards/${boardId}/cards/${cardId}/tasks`,
       taskData,
     );
-    set({ tasks: [...get().tasks, data] });
     return data;
   },
 

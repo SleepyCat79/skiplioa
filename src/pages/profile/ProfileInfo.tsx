@@ -1,9 +1,11 @@
 import { useEffect } from "react";
-import { Form, Input, Button, Avatar, Spin, message } from "antd";
+import { Form, Input, Button, Avatar, Spin } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import useAuthStore from "@/stores/authStore";
+import { useMessage } from "@/hooks/useMessage";
 
 export default function ProfileInfo() {
+  const message = useMessage();
   const { user, loading, fetchProfile, updateProfile } = useAuthStore();
   const [form] = Form.useForm();
 

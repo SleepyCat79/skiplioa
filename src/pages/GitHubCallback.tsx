@@ -1,11 +1,13 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Spin, message } from "antd";
+import { Spin } from "antd";
 import useAuthStore from "@/stores/authStore";
+import { useMessage } from "@/hooks/useMessage";
 
 export default function GitHubCallback() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  const message = useMessage();
   const { githubLogin } = useAuthStore();
   const calledRef = useRef(false);
 
@@ -24,8 +26,10 @@ export default function GitHubCallback() {
         message.success("Signed in with GitHub");
         navigate("/");
       })
-      .catch(() => {
-        message.error("GitHub login failed");
+      .catch((err: any) => {
+        message.error(
+          err.response?.data?.message || "GitHub authentication failed",
+        );
         navigate("/login");
       });
   }, [params, githubLogin, navigate]);

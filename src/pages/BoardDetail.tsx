@@ -1,15 +1,6 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Button,
-  Spin,
-  Select,
-  message,
-  Modal,
-  Form,
-  Input,
-  Popconfirm,
-} from "antd";
+import { Button, Spin, Select, Modal, Form, Input, Popconfirm } from "antd";
 import {
   PlusOutlined,
   ArrowLeftOutlined,
@@ -27,10 +18,12 @@ import useTaskStore from "@/stores/taskStore";
 import { getSocket, joinBoard, leaveBoard } from "@/services/socket";
 import type { Task, TaskStatus } from "@/types";
 import { TASK_STATUS_LIST } from "@/types";
+import { useMessage } from "@/hooks/useMessage";
 
 export default function BoardDetail() {
   const { boardId } = useParams<{ boardId: string }>();
   const navigate = useNavigate();
+  const message = useMessage();
   const { currentBoard, fetchBoard } = useBoardStore();
   const {
     cards,
@@ -55,6 +48,8 @@ export default function BoardDetail() {
     useState<TaskStatus>("backlog");
   const [cardModalOpen, setCardModalOpen] = useState(false);
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
+  const creatingTaskRef = useRef(false);
+  const savingCardRef = useRef(false);
   const [cardForm] = Form.useForm();
 
   useEffect(() => {
@@ -67,10 +62,13 @@ export default function BoardDetail() {
     const socket = getSocket();
 
     const onTaskCreated = (task: Task) => {
-      setTasks([
-        ...useTaskStore.getState().tasks.filter((t) => t.id !== task.id),
-        task,
-      ]);
+      const currentTasks = useTaskStore.getState().tasks;
+      const taskExists = currentTasks.some((t) => t.id === task.id);
+      if (taskExists) {
+        setTasks(currentTasks.map((t) => (t.id === task.id ? task : t)));
+      } else {
+        setTasks([...currentTasks, task]);
+      }
     };
     const onTaskUpdated = (task: Task) => {
       setTasks(
@@ -125,9 +123,15 @@ export default function BoardDetail() {
   };
 
   const handleCreateTask = async (cardId: string, data: Partial<Task>) => {
-    if (!boardId) return;
-    await createTask(boardId, cardId, data);
-    message.success("Task created");
+    if (!boardId || creatingTaskRef.current) return;
+
+    creatingTaskRef.current = true;
+    try {
+      await createTask(boardId, cardId, data);
+      message.success("Task created");
+    } finally {
+      creatingTaskRef.current = false;
+    }
   };
 
   const openCreateTask = (status?: TaskStatus) => {
@@ -144,7 +148,9 @@ export default function BoardDetail() {
     name: string;
     description: string;
   }) => {
-    if (!boardId) return;
+    if (!boardId || savingCardRef.current) return;
+
+    savingCardRef.current = true;
     try {
       if (editingCardId) {
         await updateCard(boardId, editingCardId, values);
@@ -157,7 +163,11 @@ export default function BoardDetail() {
       setEditingCardId(null);
       cardForm.resetFields();
     } catch {
-      message.error("Something went wrong");
+      message.error(
+        editingCardId ? "Failed to update card" : "Failed to create card",
+      );
+    } finally {
+      savingCardRef.current = false;
     }
   };
 
@@ -185,7 +195,7 @@ export default function BoardDetail() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/")}
@@ -204,7 +214,7 @@ export default function BoardDetail() {
               </span>
             </div>
             {currentBoard?.description && (
-              <p className="text-sm text-[#64748b] m-0 mt-0.5">
+              <p className="text-xs text-[#64748b] m-0 mt-1">
                 {currentBoard.description}
               </p>
             )}
@@ -220,7 +230,7 @@ export default function BoardDetail() {
               allowClear
               onClear={() => setSelectedCardId("")}
               style={{ minWidth: 160 }}
-              popupClassName="dark-select-dropdown"
+              classNames={{ popup: { root: "dark-select-dropdown" } }}
             >
               {cards.map((card) => (
                 <Select.Option key={card.id} value={card.id}>
@@ -350,6 +360,7 @@ export default function BoardDetail() {
       <CreateTaskModal
         open={createTaskOpen}
         cardId={selectedCardId || (cards[0]?.id ?? "")}
+        boardId={boardId || ""}
         defaultStatus={defaultTaskStatus}
         onClose={() => setCreateTaskOpen(false)}
         onCreate={handleCreateTask}
@@ -365,7 +376,7 @@ export default function BoardDetail() {
         }}
         onOk={() => cardForm.submit()}
         okText={editingCardId ? "Save" : "Create"}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={cardForm} layout="vertical" onFinish={handleCardSubmit}>
           <Form.Item

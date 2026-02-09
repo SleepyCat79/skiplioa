@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Button,
@@ -10,7 +10,6 @@ import {
   Dropdown,
   Avatar,
   Select,
-  message,
 } from "antd";
 import {
   PlusOutlined,
@@ -22,9 +21,11 @@ import {
 } from "@ant-design/icons";
 import useBoardStore from "@/stores/boardStore";
 import useAuthStore from "@/stores/authStore";
+import { useMessage } from "@/hooks/useMessage";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const message = useMessage();
   const { user } = useAuthStore();
   const {
     boards,
@@ -40,6 +41,7 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState<string>("active");
   const [boardsFilter, setBoardsFilter] = useState<string>("my-boards");
   const [form] = Form.useForm();
+  const savingBoardRef = useRef(false);
 
   useEffect(() => {
     fetchBoards();
@@ -49,6 +51,9 @@ export default function Dashboard() {
     name: string;
     description: string;
   }) => {
+    if (savingBoardRef.current) return;
+
+    savingBoardRef.current = true;
     try {
       if (editingBoard) {
         await updateBoard(editingBoard, values);
@@ -61,7 +66,11 @@ export default function Dashboard() {
       setEditingBoard(null);
       form.resetFields();
     } catch {
-      message.error("Something went wrong");
+      message.error(
+        editingBoard ? "Failed to update board" : "Failed to create board",
+      );
+    } finally {
+      savingBoardRef.current = false;
     }
   };
 
@@ -330,7 +339,7 @@ export default function Dashboard() {
         }}
         onOk={() => form.submit()}
         okText={editingBoard ? "Save" : "Create"}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item

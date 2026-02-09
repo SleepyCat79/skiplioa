@@ -25,8 +25,6 @@ export function initSocket(httpServer) {
   });
 
   io.on("connection", (socket) => {
-    console.log(`User connected: ${socket.user.userId}`);
-
     socket.on("join:board", (boardId) => {
       socket.join(`board:${boardId}`);
     });
@@ -35,9 +33,7 @@ export function initSocket(httpServer) {
       socket.leave(`board:${boardId}`);
     });
 
-    socket.on("disconnect", () => {
-      console.log(`User disconnected: ${socket.user.userId}`);
-    });
+    socket.on("disconnect", () => {});
   });
 
   return io;

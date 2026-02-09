@@ -2,6 +2,9 @@ import { githubConfig } from "../config/github.js";
 import { db } from "../config/firebase.js";
 
 async function githubFetch(path) {
+  if (!githubConfig.token) {
+    throw new Error("GitHub token not configured");
+  }
   const res = await fetch(`https://api.github.com${path}`, {
     headers: {
       Authorization: `Bearer ${githubConfig.token}`,
@@ -9,7 +12,9 @@ async function githubFetch(path) {
       "X-GitHub-Api-Version": "2022-11-28",
     },
   });
-  if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`GitHub API error: ${res.status}`);
+  }
   return res.json();
 }
 
@@ -18,14 +23,10 @@ export async function getRepoInfo(req, res) {
     const repoPath = decodeURIComponent(req.params.repositoryId);
 
     const [branches, pulls, issues, commits] = await Promise.all([
-      githubFetch(`/repos/${repoPath}/branches`).catch(() => []),
-      githubFetch(`/repos/${repoPath}/pulls?state=all&per_page=30`).catch(
-        () => [],
-      ),
-      githubFetch(`/repos/${repoPath}/issues?state=all&per_page=30`).catch(
-        () => [],
-      ),
-      githubFetch(`/repos/${repoPath}/commits?per_page=30`).catch(() => []),
+      githubFetch(`/repos/${repoPath}/branches`),
+      githubFetch(`/repos/${repoPath}/pulls?state=all&per_page=30`),
+      githubFetch(`/repos/${repoPath}/issues?state=all&per_page=30`),
+      githubFetch(`/repos/${repoPath}/commits?per_page=30`),
     ]);
 
     res.json({
@@ -50,8 +51,10 @@ export async function getRepoInfo(req, res) {
       })),
     });
   } catch (err) {
-    console.error("getRepoInfo error:", err);
-    res.status(500).json({ error: "Failed to fetch repository info" });
+    res.status(500).json({
+      error: "Failed to fetch repository info",
+      details: err.message,
+    });
   }
 }
 
@@ -78,7 +81,6 @@ export async function attachGitHub(req, res) {
 
     res.status(201).json({ taskId, ...attachment });
   } catch (err) {
-    console.error("attachGitHub error:", err);
     res.status(500).json({ error: "Failed to attach GitHub item" });
   }
 }
@@ -91,7 +93,6 @@ export async function getGitHubAttachments(req, res) {
 
     res.json(taskDoc.data().githubAttachments || []);
   } catch (err) {
-    console.error("getGitHubAttachments error:", err);
     res.status(500).json({ error: "Failed to fetch attachments" });
   }
 }
@@ -110,7 +111,6 @@ export async function removeGitHubAttachment(req, res) {
 
     res.status(204).send();
   } catch (err) {
-    console.error("removeGitHubAttachment error:", err);
     res.status(500).json({ error: "Failed to remove attachment" });
   }
 }

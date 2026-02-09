@@ -11,7 +11,6 @@ export async function getTasks(req, res) {
     const tasks = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     res.json(tasks);
   } catch (err) {
-    console.error("getTasks error:", err);
     res.status(500).json({ error: "Failed to fetch tasks" });
   }
 }
@@ -26,7 +25,6 @@ export async function getAllBoardTasks(req, res) {
     const tasks = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     res.json(tasks);
   } catch (err) {
-    console.error("getAllBoardTasks error:", err);
     res.status(500).json({ error: "Failed to fetch board tasks" });
   }
 }
@@ -37,7 +35,6 @@ export async function getTask(req, res) {
     if (!doc.exists) return res.status(404).json({ error: "Task not found" });
     res.json({ id: doc.id, ...doc.data() });
   } catch (err) {
-    console.error("getTask error:", err);
     res.status(500).json({ error: "Failed to fetch task" });
   }
 }
@@ -79,7 +76,6 @@ export async function createTask(req, res) {
     emitToBoardRoom(boardId, "task:created", task);
     res.status(201).json(task);
   } catch (err) {
-    console.error("createTask error:", err);
     res.status(500).json({ error: "Failed to create task" });
   }
 }
@@ -108,7 +104,6 @@ export async function updateTask(req, res) {
     emitToBoardRoom(boardId, "task:updated", taskData);
     res.json(taskData);
   } catch (err) {
-    console.error("updateTask error:", err);
     res.status(500).json({ error: "Failed to update task" });
   }
 }
@@ -134,7 +129,6 @@ export async function deleteTask(req, res) {
     emitToBoardRoom(boardId, "task:deleted", { taskId });
     res.status(204).send();
   } catch (err) {
-    console.error("deleteTask error:", err);
     res.status(500).json({ error: "Failed to delete task" });
   }
 }
@@ -159,7 +153,6 @@ export async function assignMember(req, res) {
 
     res.status(201).json({ taskId, memberId });
   } catch (err) {
-    console.error("assignMember error:", err);
     res.status(500).json({ error: "Failed to assign member" });
   }
 }
@@ -176,7 +169,6 @@ export async function getAssignedMembers(req, res) {
 
     res.json(assignees);
   } catch (err) {
-    console.error("getAssignedMembers error:", err);
     res.status(500).json({ error: "Failed to fetch assigned members" });
   }
 }
@@ -196,7 +188,6 @@ export async function removeAssignment(req, res) {
 
     res.status(204).send();
   } catch (err) {
-    console.error("removeAssignment error:", err);
     res.status(500).json({ error: "Failed to remove assignment" });
   }
 }

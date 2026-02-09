@@ -74,9 +74,7 @@ const useBoardStore = create<BoardState>((set, get) => ({
     try {
       const { data } = await api.get("/invitations");
       set({ invitations: data });
-    } catch {
-      // no-op
-    }
+    } catch {}
   },
 
   respondInvitation: async (

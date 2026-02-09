@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Modal, Input, message, Typography } from "antd";
+import { Modal, Input, Typography } from "antd";
 import { MailOutlined } from "@ant-design/icons";
 import useBoardStore from "@/stores/boardStore";
+import { useMessage } from "@/hooks/useMessage";
 
 interface Props {
   boardId: string;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function InviteModal({ boardId, open, onClose }: Props) {
+  const message = useMessage();
   const { inviteMember } = useBoardStore();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);

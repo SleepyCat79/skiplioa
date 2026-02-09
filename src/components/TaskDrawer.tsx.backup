@@ -1,0 +1,446 @@
+import { useState } from "react";
+import {
+  Drawer,
+  Form,
+  Input,
+  Select,
+  Button,
+  Tag,
+  Popconfirm,
+  Avatar,
+  Tooltip,
+} from "antd";
+import {
+  UserAddOutlined,
+  UserDeleteOutlined,
+  GithubOutlined,
+  CalendarOutlined,
+  CloseOutlined,
+  ShareAltOutlined,
+  FolderOutlined,
+} from "@ant-design/icons";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import type { Task } from "@/types";
+
+dayjs.extend(relativeTime);
+import { TASK_PRIORITY_OPTIONS, TASK_STATUS_LIST } from "@/types";
+import useTaskStore from "@/stores/taskStore";
+import GitHubPanel from "./GitHubPanel";
+import { useMessage } from "@/hooks/useMessage";
+
+interface Props {
+  task: Task | null;
+  open: boolean;
+  boardId: string;
+  onClose: () => void;
+}
+
+export default function TaskDrawer({ task, open, boardId, onClose }: Props) {
+  const message = useMessage();
+  const { updateTask, deleteTask, assignMember, removeMember } = useTaskStore();
+  const [form] = Form.useForm();
+  const [saving, setSaving] = useState(false);
+  const [showGithub, setShowGithub] = useState(false);
+  const [memberEmail, setMemberEmail] = useState("");
+
+  const handleSave = async (values: Record<string, unknown>) => {
+    if (!task) return;
+    setSaving(true);
+    try {
+      const updates: Partial<Task> = {
+        title: values.title as string,
+        description: values.description as string,
+        status: values.status as Task["status"],
+        priority: values.priority as Task["priority"],
+        deadline: values.deadline
+          ? (values.deadline as dayjs.Dayjs).toISOString()
+          : undefined,
+      };
+      await updateTask(boardId, task.cardId, task.id, updates);
+      message.success("Task updated");
+      onClose();
+    } catch {
+      message.error("Failed to update task");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!task) return;
+    try {
+      await deleteTask(boardId, task.cardId, task.id);
+      message.success("Task deleted");
+      onClose();
+    } catch {
+      message.error("Failed to delete task");
+    }
+  };
+
+  const handleAssign = async () => {
+    if (!task || !memberEmail.trim()) return;
+    try {
+      await assignMember(boardId, task.cardId, task.id, memberEmail.trim());
+      setMemberEmail("");
+      message.success("Member assigned");
+    } catch {
+      message.error("Failed to assign member");
+    }
+  };
+
+  const handleRemoveAssignee = async (memberId: string) => {
+    if (!task) return;
+    try {
+      await removeMember(boardId, task.cardId, task.id, memberId);
+      message.success("Member removed");
+    } catch {
+      message.error("Failed to remove member");
+    }
+  };
+
+  if (!task) return null;
+
+  const statusConfig = TASK_STATUS_LIST.find((s) => s.key === task.status);
+  const priorityConfig = TASK_PRIORITY_OPTIONS.find(
+    (p) => p.value === task.priority,
+  );
+  const shortId = task.id.slice(-6).toUpperCase();
+
+  return (
+    <Drawer
+      title={null}
+      open={open}
+      onClose={onClose}
+      width={860}
+      closable={false}
+      styles={{
+        body: { padding: 0 },
+        header: { display: "none" },
+      }}
+    >
+      <div className="flex flex-col h-full bg-[#0f1219]">
+        <div className="flex items-center justify-between px-8 py-5 border-b border-[#1e293b] bg-[#0b0e14]">
+          <div className="flex items-center gap-2.5 text-sm">
+            <FolderOutlined className="text-[#64748b] text-base" />
+            <span className="text-[#94a3b8] font-medium">Project</span>
+            <span className="text-[#334155] font-light">/</span>
+            <span className="font-mono text-xs bg-[#1a2332] px-2.5 py-1 rounded-md text-[#3b82f6] font-semibold border border-[#1e293b]">
+              #{shortId}
+            </span>
+            {statusConfig && (
+              <>
+                <span className="text-[#334155] mx-1.5">&middot;</span>
+                <span className="flex items-center gap-2 bg-[#1a2332] px-3 py-1 rounded-md border border-[#1e293b]">
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: statusConfig.color }}
+                  />
+                  <span className="text-[#cbd5e1] text-xs font-medium">
+                    {statusConfig.label}
+                  </span>
+                </span>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Tooltip title="Share">
+              <Button
+                type="text"
+                size="small"
+                icon={<ShareAltOutlined />}
+                className="!text-[#64748b] hover:!text-[#e2e8f0] hover:!bg-[#1a2332] !w-9 !h-9"
+              />
+            </Tooltip>
+            <Tooltip title="Close">
+              <Button
+                type="text"
+                size="small"
+                icon={<CloseOutlined />}
+                onClick={onClose}
+                className="!text-[#64748b] hover:!text-[#e2e8f0] hover:!bg-[#1a2332] !w-9 !h-9"
+              />
+            </Tooltip>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          <div className="flex h-full">
+            <div className="flex-1 px-8 py-6 min-w-0 overflow-y-auto">
+              <Form
+                form={form}
+                layout="vertical"
+                onFinish={handleSave}
+                initialValues={{
+                  title: task.title,
+                  description: task.description,
+                  status: task.status,
+                  priority: task.priority,
+                  deadline: task.deadline ? dayjs(task.deadline) : null,
+                }}
+              >
+                <Form.Item
+                  name="title"
+                  rules={[{ required: true, message: "Title is required" }]}
+                  className="mb-8!"
+                >
+                  <Input
+                    variant="borderless"
+                    placeholder="Task title"
+                    className="text-2xl! font-bold! text-[#e2e8f0]! px-0! py-0! placeholder:text-[#334155]!"
+                    style={{ height: "auto" }}
+                  />
+                </Form.Item>
+
+                <div className="mb-8">
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className="w-6 h-6 flex items-center justify-center bg-[#1a2332] rounded-md">
+                      <FolderOutlined className="text-[#64748b] text-sm" />
+                    </div>
+                    <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-wide">
+                      Description
+                    </span>
+                  </div>
+                  <Form.Item name="description" className="mb-0!">
+                    <Input.TextArea
+                      rows={5}
+                      placeholder="Add a detailed description..."
+                      className="resize-none !bg-[#131720] !border-[#1e293b] placeholder:!text-[#334155] !text-[#cbd5e1] !rounded-lg"
+                      style={{ fontSize: "14px", lineHeight: "1.6" }}
+                    />
+                  </Form.Item>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={saving}
+                    className="!h-9 !px-6 !rounded-lg !font-medium"
+                  >
+                    Save Changes
+                  </Button>
+                  <Popconfirm
+                    title="Delete this task?"
+                    onConfirm={handleDelete}
+                  >
+                    <Button danger className="!h-9 !px-5 !rounded-lg">
+                      Delete
+                    </Button>
+                  </Popconfirm>
+                </div>
+              </Form>
+
+              <div className="mt-10 pt-8 border-t border-[#1e293b]">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-6 h-6 flex items-center justify-center bg-[#1a2332] rounded-md">
+                      <GithubOutlined className="text-[#64748b] text-sm" />
+                    </div>
+                    <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-wide">
+                      Linked GitHub Activity
+                    </span>
+                  </div>
+                  <Button
+                    type="link"
+                    size="small"
+                    onClick={() => setShowGithub(!showGithub)}
+                    className="text-[#3b82f6]! text-xs! p-0! h-auto! font-medium!"
+                  >
+                    + Link PR or Commit
+                  </Button>
+                </div>
+
+                {task.githubAttachments &&
+                  task.githubAttachments.length > 0 && (
+                    <div className="mb-5">
+                      <div className="text-xs font-medium text-[#64748b] mb-3 uppercase tracking-wide">
+                        Attached Items
+                      </div>
+                      <div className="space-y-2">
+                        {task.githubAttachments.map((att) => (
+                          <div
+                            key={att.attachmentId}
+                            className="flex items-center gap-3 px-4 py-3.5 bg-[#131720] rounded-lg border border-[#1e293b] hover:border-[#334155] transition-colors"
+                          >
+                            <GithubOutlined className="text-[#64748b] text-base shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm font-medium text-[#e2e8f0] truncate block">
+                                {att.title ||
+                                  (att.number
+                                    ? `#${att.number}`
+                                    : att.sha?.substring(0, 7))}
+                              </span>
+                              <span className="text-xs text-[#64748b] capitalize">
+                                {att.type.replace("_", " ")}
+                              </span>
+                            </div>
+                            <Tag
+                              color={
+                                att.type === "pull_request"
+                                  ? "green"
+                                  : att.type === "issue"
+                                    ? "orange"
+                                    : "blue"
+                              }
+                              className="rounded-md! border-0! text-[11px]! font-medium! shrink-0"
+                            >
+                              {att.type === "pull_request"
+                                ? "PR"
+                                : att.type === "issue"
+                                  ? "Issue"
+                                  : "Commit"}
+                            </Tag>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {showGithub && (
+                  <div className="mt-4 p-5 bg-[#131720] rounded-xl border border-[#1e293b]">
+                    <GitHubPanel task={task} boardId={boardId} />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="w-64 border-l border-[#1e293b] px-6 py-6 shrink-0 space-y-7 bg-[#0b0e14]">
+              <div>
+                <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-wider block mb-3">
+                  Status
+                </span>
+                <Form form={form}>
+                  <Form.Item name="status" className="mb-0!">
+                    <Select className="w-full !h-9">
+                      {TASK_STATUS_LIST.map((s) => (
+                        <Select.Option key={s.key} value={s.key}>
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              className="w-2.5 h-2.5 rounded-full inline-block"
+                              style={{ backgroundColor: s.color }}
+                            />
+                            <span className="text-sm">{s.label}</span>
+                          </div>
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Form>
+              </div>
+
+              <div>
+                <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-wider block mb-3">
+                  Priority
+                </span>
+                {priorityConfig ? (
+                  <Tag
+                    color={priorityConfig.color}
+                    className="rounded-md! text-xs! font-medium!"
+                  >
+                    {priorityConfig.label}
+                  </Tag>
+                ) : (
+                  <span className="text-sm text-[#64748b]">None</span>
+                )}
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-wider">
+                    Assignees
+                  </span>
+                  <Tooltip title="Add assignee">
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={
+                        <UserAddOutlined className="text-[#3b82f6] text-xs" />
+                      }
+                      className="!w-6 !h-6 !min-w-0 hover:!bg-[#1a2332]"
+                    />
+                  </Tooltip>
+                </div>
+                <div className="space-y-2">
+                  {task.assignees &&
+                    task.assignees.map((assignee) => (
+                      <div
+                        key={assignee}
+                        className="flex items-center justify-between group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Avatar
+                            size={24}
+                            className="bg-[#1a1f2e]! text-[10px]!"
+                          >
+                            {assignee[0]?.toUpperCase()}
+                          </Avatar>
+                          <span className="text-xs text-[#e2e8f0] truncate max-w-28">
+                            {assignee}
+                          </span>
+                        </div>
+                        <Button
+                          type="text"
+                          size="small"
+                          danger
+                          icon={<UserDeleteOutlined className="text-xs" />}
+                          onClick={() => handleRemoveAssignee(assignee)}
+                          className="opacity-0 group-hover:opacity-100 !w-5 !h-5 !min-w-0"
+                        />
+                      </div>
+                    ))}
+                  <div className="flex gap-1.5 mt-2">
+                    <Input
+                      placeholder="Email"
+                      size="small"
+                      value={memberEmail}
+                      onChange={(e) => setMemberEmail(e.target.value)}
+                      onPressEnter={handleAssign}
+                      className="text-xs!"
+                    />
+                    <Button
+                      size="small"
+                      icon={<UserAddOutlined className="text-xs" />}
+                      onClick={handleAssign}
+                      className="!min-w-0 !w-7 !h-6"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-wider block mb-3">
+                  Due Date
+                </span>
+                {task.deadline ? (
+                  <div className="flex items-center gap-2 text-sm text-[#cbd5e1]">
+                    <CalendarOutlined className="text-[#64748b] text-xs" />
+                    <span className="font-medium">
+                      {dayjs(task.deadline).format("MMM D, YYYY")}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-sm text-[#64748b]">No due date</span>
+                )}
+              </div>
+
+              {task.createdAt && (
+                <div className="pt-6 border-t border-[#1e293b]">
+                  <span className="text-[11px] text-[#64748b] leading-relaxed">
+                    Created {dayjs(task.createdAt).format("MMM D")}
+                    {task.updatedAt && (
+                      <>
+                        <br />
+                        Updated {dayjs(task.updatedAt).fromNow()}
+                      </>
+                    )}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </Drawer>
+  );
+}

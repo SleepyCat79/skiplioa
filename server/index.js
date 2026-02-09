@@ -13,39 +13,43 @@ import githubRoutes from "./routes/github.js";
 
 dotenv.config();
 
-console.log("Initializing server...");
-console.log("Environment check:", {
-  port: process.env.PORT,
-  clientUrl: process.env.CLIENT_URL,
-  firebaseProjectId: process.env.FIREBASE_PROJECT_ID,
-  hasJwtSecret: !!process.env.JWT_SECRET,
-});
+const requiredEnvVars = [
+  "JWT_SECRET",
+  "SMTP_HOST",
+  "SMTP_PORT",
+  "SMTP_USER",
+  "SMTP_PASS",
+  "FIREBASE_PROJECT_ID",
+  "FIREBASE_CLIENT_EMAIL",
+  "FIREBASE_PRIVATE_KEY",
+];
+
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    throw new Error(`Missing required environment variable: ${envVar}`);
+  }
+}
 
 const app = express();
 const server = createServer(app);
 
-console.log("Initializing Socket.IO...");
 initSocket(server);
-console.log("Socket.IO initialized");
 
 app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:3000" }));
 app.use(express.json());
 
-// Public health check endpoint (before routes)
 app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-app.use(authRoutes);
-app.use(boardRoutes);
-app.use(cardRoutes);
-app.use(taskRoutes);
-app.use(userRoutes);
-app.use(githubRoutes);
+app.use("/api", authRoutes);
+app.use("/api", boardRoutes);
+app.use("/api", cardRoutes);
+app.use("/api", taskRoutes);
+app.use("/api", userRoutes);
+app.use("/api", githubRoutes);
 
-// Error handling middleware
 app.use((err, req, res, next) => {
-  console.error("Error middleware:", err);
   res.status(err.status || 500).json({
     error: err.message || "Internal server error",
   });
@@ -56,27 +60,21 @@ server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// Handle server errors
 server.on("error", (err) => {
-  console.error("Server error:", err);
+  if (err.code === "EADDRINUSE") {
+    console.error(`Port ${PORT} is already in use`);
+  }
+  process.exit(1);
 });
 
-// Handle uncaught errors
 process.on("uncaughtException", (err) => {
-  console.error("Uncaught exception:", err);
-  console.error("Stack:", err.stack);
-  // Don't exit the process
+  console.error("Uncaught exception:", err.message);
 });
 
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled rejection at:", promise, "reason:", reason);
-  // Don't exit the process
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled rejection:", reason);
 });
 
-// Graceful shutdown
 process.on("SIGTERM", () => {
-  console.log("SIGTERM signal received: closing HTTP server");
-  server.close(() => {
-    console.log("HTTP server closed");
-  });
+  server.close();
 });

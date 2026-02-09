@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Form, Input, Button, Switch, message } from "antd";
+import { Form, Input, Button, Switch } from "antd";
 import { LockOutlined, SafetyOutlined } from "@ant-design/icons";
+import { useMessage } from "@/hooks/useMessage";
 
 export default function AccountSecurity() {
+  const message = useMessage();
   const [passwordForm] = Form.useForm();
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 

@@ -52,7 +52,6 @@
 }
 
 @layer components {
-  /* Ant Design Component Overrides */
   .ant-popover .ant-popover-inner {
     background-color: #131720 !important;
   }
@@ -101,16 +100,33 @@
   }
 
   .ant-drawer .ant-drawer-content {
-    background: #131720 !important;
+    background: #0f1219 !important;
   }
 
   .ant-drawer .ant-drawer-header {
     border-bottom: 1px solid #1e293b !important;
+    background: #0f1219 !important;
   }
 
   .ant-select-dropdown {
     background: #131720 !important;
     border: 1px solid #1e293b !important;
+  }
+
+  .ant-tabs .ant-tabs-tab {
+    color: #64748b !important;
+  }
+
+  .ant-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+    color: #3b82f6 !important;
+  }
+
+  .ant-tabs .ant-tabs-ink-bar {
+    background: #3b82f6 !important;
+  }
+
+  .ant-list .ant-list-item {
+    border-block-end-color: #1e293b !important;
   }
 
   .ant-form-item-label > label {
@@ -173,7 +189,6 @@
     border-color: #1e293b !important;
   }
 
-  /* Custom Components */
   .board-card-enter {
     transition:
       transform 0.15s ease,
@@ -184,4 +199,80 @@
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   }
+}
+
+/* Markdown Editor Dark Theme Styles */
+.w-md-editor {
+  background-color: #0f1219 !important;
+  border: 1px solid #1e293b !important;
+  border-radius: 8px !important;
+  color: #cbd5e1 !important;
+}
+
+.w-md-editor-toolbar {
+  background-color: #0b0e14 !important;
+  border-bottom: 1px solid #1e293b !important;
+}
+
+.w-md-editor-toolbar button,
+.w-md-editor-toolbar li button {
+  color: #94a3b8 !important;
+}
+
+.w-md-editor-toolbar button:hover,
+.w-md-editor-toolbar li button:hover {
+  color: #e2e8f0 !important;
+  background-color: #1a2332 !important;
+}
+
+.w-md-editor-content {
+  background-color: #0f1219 !important;
+}
+
+.w-md-editor-text,
+.w-md-editor-text-pre,
+.w-md-editor-text-input {
+  color: #cbd5e1 !important;
+}
+
+.w-md-editor-preview {
+  background-color: #0f1219 !important;
+}
+
+.wmde-markdown {
+  background-color: transparent !important;
+  color: #cbd5e1 !important;
+}
+
+.wmde-markdown h1,
+.wmde-markdown h2,
+.wmde-markdown h3,
+.wmde-markdown h4,
+.wmde-markdown h5,
+.wmde-markdown h6 {
+  color: #e2e8f0 !important;
+  border-bottom-color: #1e293b !important;
+}
+
+.wmde-markdown code {
+  background-color: #1a2332 !important;
+  color: #3b82f6 !important;
+}
+
+.wmde-markdown pre {
+  background-color: #0b0e14 !important;
+}
+
+.wmde-markdown a {
+  color: #3b82f6 !important;
+}
+
+.wmde-markdown blockquote {
+  border-left-color: #1e293b !important;
+  color: #94a3b8 !important;
+}
+
+.wmde-markdown ul,
+.wmde-markdown ol {
+  color: #cbd5e1 !important;
 }

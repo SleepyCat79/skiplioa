@@ -1,13 +1,5 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import {
-  Layout as AntLayout,
-  Avatar,
-  Dropdown,
-  Badge,
-  Button,
-  Popover,
-  List,
-} from "antd";
+import { Avatar, Dropdown, Badge, Button, Popover, List, Tooltip } from "antd";
 import {
   AppstoreOutlined,
   TeamOutlined,
@@ -17,11 +9,11 @@ import {
   SettingOutlined,
   CheckOutlined,
   CloseOutlined,
+  CodeOutlined,
+  FolderOutlined,
 } from "@ant-design/icons";
 import useAuthStore from "@/stores/authStore";
 import useBoardStore from "@/stores/boardStore";
-
-const { Header, Content } = AntLayout;
 
 export default function AppLayout() {
   const navigate = useNavigate();
@@ -34,9 +26,10 @@ export default function AppLayout() {
     navigate("/login");
   };
 
-  const navItems = [
+  const sideNavItems = [
     { key: "/", icon: <AppstoreOutlined />, label: "Boards" },
     { key: "/users", icon: <TeamOutlined />, label: "Team" },
+    { key: "/profile/integrations", icon: <CodeOutlined />, label: "GitHub" },
     { key: "/profile", icon: <SettingOutlined />, label: "Settings" },
   ];
 
@@ -45,26 +38,12 @@ export default function AppLayout() {
       return (
         location.pathname === "/" || location.pathname.startsWith("/boards")
       );
+    if (key === "/profile")
+      return (
+        location.pathname.startsWith("/profile") &&
+        !location.pathname.startsWith("/profile/integrations")
+      );
     return location.pathname.startsWith(key);
-  };
-
-  const userMenu = {
-    items: [
-      {
-        key: "profile",
-        icon: <UserOutlined />,
-        label: "Profile",
-        onClick: () => navigate("/profile"),
-      },
-      { type: "divider" as const },
-      {
-        key: "logout",
-        icon: <LogoutOutlined />,
-        label: "Log Out",
-        danger: true,
-        onClick: handleLogout,
-      },
-    ],
   };
 
   const handleInviteAction = async (
@@ -74,9 +53,7 @@ export default function AppLayout() {
   ) => {
     try {
       await respondInvitation(inviteId, boardId, action);
-    } catch {
-      /* store handles */
-    }
+    } catch {}
   };
 
   const invitationContent = (
@@ -126,59 +103,71 @@ export default function AppLayout() {
     />
   );
 
-  return (
-    <AntLayout className="h-screen">
-      <Header className="!bg-[#0b0e14] !px-6 flex items-center justify-between border-b border-[#1e293b] !h-14 !leading-14">
-        <div className="flex items-center gap-8">
-          <div
-            className="flex items-center gap-2 cursor-pointer"
-            onClick={() => navigate("/")}
-          >
-            <div className="w-7 h-7 bg-[#3b82f6] rounded-lg flex items-center justify-center">
-              <AppstoreOutlined className="text-white text-sm" />
-            </div>
-            <span className="text-[#e2e8f0] font-semibold text-base tracking-tight">
-              DevBoard
-            </span>
-          </div>
+  const userMenu = {
+    items: [
+      {
+        key: "profile",
+        icon: <UserOutlined />,
+        label: "Profile",
+        onClick: () => navigate("/profile"),
+      },
+      { type: "divider" as const },
+      {
+        key: "logout",
+        icon: <LogoutOutlined />,
+        label: "Log Out",
+        danger: true,
+        onClick: handleLogout,
+      },
+    ],
+  };
 
-          <nav className="flex items-center gap-1">
-            {navItems.map((item) => (
+  return (
+    <div className="h-screen flex">
+      <div className="w-14 bg-[#0b0e14] border-r border-[#1e293b] flex flex-col items-center py-4 shrink-0">
+        <div
+          className="w-9 h-9 bg-[#3b82f6] rounded-lg flex items-center justify-center cursor-pointer mb-6"
+          onClick={() => navigate("/")}
+        >
+          <AppstoreOutlined className="text-white text-base" />
+        </div>
+
+        <nav className="flex flex-col items-center gap-1 flex-1">
+          {sideNavItems.map((item) => (
+            <Tooltip key={item.key} title={item.label} placement="right">
               <button
-                key={item.key}
                 onClick={() => navigate(item.key)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all border-0 cursor-pointer ${
+                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all border-0 cursor-pointer text-base ${
                   isActive(item.key)
                     ? "bg-[#1a1f2e] text-[#3b82f6]"
-                    : "bg-transparent text-[#64748b] hover:bg-[#131720] hover:text-[#e2e8f0]"
+                    : "bg-transparent text-[#475569] hover:bg-[#131720] hover:text-[#94a3b8]"
                 }`}
               >
                 {item.icon}
-                <span>{item.label}</span>
               </button>
-            ))}
-          </nav>
-        </div>
+            </Tooltip>
+          ))}
+        </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col items-center gap-2 mt-auto">
           <Popover
             content={invitationContent}
             title={<span className="text-[#e2e8f0]">Notifications</span>}
             trigger="click"
-            placement="bottomRight"
+            placement="rightBottom"
           >
             <Badge count={invitations.length} size="small" offset={[-2, 2]}>
               <Button
                 type="text"
                 shape="circle"
-                icon={<BellOutlined className="text-[#64748b] text-base" />}
-                className="!w-9 !h-9 flex items-center justify-center hover:!bg-[#131720]"
+                icon={<BellOutlined className="text-[#475569] text-base" />}
+                className="!w-10 !h-10 flex items-center justify-center hover:!bg-[#131720]"
               />
             </Badge>
           </Popover>
 
           <Dropdown menu={userMenu} placement="bottomRight" trigger={["click"]}>
-            <div className="flex items-center gap-2 cursor-pointer hover:bg-[#131720] px-2 py-1 rounded-lg transition-colors ml-1">
+            <div className="cursor-pointer">
               <Avatar
                 size={32}
                 icon={<UserOutlined />}
@@ -188,11 +177,38 @@ export default function AppLayout() {
             </div>
           </Dropdown>
         </div>
-      </Header>
+      </div>
 
-      <Content className="overflow-auto bg-[#0b0e14] p-6">
-        <Outlet />
-      </Content>
-    </AntLayout>
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex items-center justify-between px-6 py-3 border-b border-[#1e293b] bg-[#0b0e14]">
+          <div className="flex items-center gap-3">
+            <FolderOutlined className="text-[#475569]" />
+            <span className="text-sm font-semibold text-[#e2e8f0]">
+              {location.pathname === "/" ||
+              location.pathname.startsWith("/boards")
+                ? "Project Dashboard"
+                : location.pathname.startsWith("/users")
+                  ? "Team Members"
+                  : "Settings"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {user?.avatarUrl ? (
+              <Avatar.Group size={28}>
+                <Avatar
+                  src={user.avatarUrl}
+                  size={28}
+                  className="!border-[#0b0e14]"
+                />
+              </Avatar.Group>
+            ) : null}
+          </div>
+        </div>
+
+        <main className="flex-1 overflow-auto bg-[#0b0e14] p-6">
+          <Outlet />
+        </main>
+      </div>
+    </div>
   );
 }

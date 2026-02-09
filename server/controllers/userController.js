@@ -6,7 +6,6 @@ export async function getUsers(req, res) {
     const users = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     res.json(users);
   } catch (err) {
-    console.error("getUsers error:", err);
     res.status(500).json({ error: "Failed to fetch users" });
   }
 }
@@ -17,7 +16,6 @@ export async function getUser(req, res) {
     if (!doc.exists) return res.status(404).json({ error: "User not found" });
     res.json({ id: doc.id, ...doc.data() });
   } catch (err) {
-    console.error("getUser error:", err);
     res.status(500).json({ error: "Failed to fetch user" });
   }
 }
@@ -38,7 +36,6 @@ export async function updateUser(req, res) {
     const updated = await ref.get();
     res.json({ id: updated.id, ...updated.data() });
   } catch (err) {
-    console.error("updateUser error:", err);
     res.status(500).json({ error: "Failed to update user" });
   }
 }

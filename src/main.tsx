@@ -56,8 +56,8 @@ createRoot(document.getElementById("root")!).render(
           },
           Menu: {
             colorBgContainer: "transparent",
-            colorItemBgSelected: "rgba(59,130,246,0.12)",
-            colorItemTextSelected: "#3b82f6",
+            itemSelectedBg: "rgba(59,130,246,0.12)",
+            itemSelectedColor: "#3b82f6",
           },
           Divider: {
             colorSplit: "#1e293b",

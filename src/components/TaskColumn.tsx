@@ -21,14 +21,14 @@ export default function TaskColumn({
   const statusConfig = TASK_STATUS_LIST.find((s) => s.key === status);
 
   return (
-    <div className="shrink-0 w-70 bg-[#0f1219] rounded-xl flex flex-col max-h-full border border-[#1e293b]">
-      <div className="flex items-center justify-between px-3.5 py-3 border-b border-[#1e293b]">
+    <div className="shrink-0 w-72 bg-[#0f1219] rounded-xl flex flex-col max-h-full border border-[#1e293b]">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#1e293b]">
         <div className="flex items-center gap-2">
           <div
-            className="w-2 h-2 rounded-full"
+            className="w-2.5 h-2.5 rounded-full"
             style={{ backgroundColor: statusConfig?.color }}
           />
-          <span className="text-sm font-medium text-[#e2e8f0]">
+          <span className="text-sm font-semibold text-[#e2e8f0]">
             {statusConfig?.label}
           </span>
         </div>
@@ -36,10 +36,11 @@ export default function TaskColumn({
           count={tasks.length}
           showZero
           style={{
-            backgroundColor: "#131720",
+            backgroundColor: "#1a2332",
             color: "#64748b",
             fontSize: 11,
             boxShadow: "none",
+            border: "1px solid #2a3441",
           }}
         />
       </div>
@@ -49,7 +50,7 @@ export default function TaskColumn({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`flex-1 overflow-y-auto p-2 min-h-20 transition-colors ${
+            className={`flex-1 overflow-y-auto p-2.5 min-h-24 transition-colors ${
               snapshot.isDraggingOver ? "bg-[#3b82f6]/5" : ""
             }`}
           >
@@ -67,7 +68,7 @@ export default function TaskColumn({
       </Droppable>
 
       {onAddTask && (
-        <div className="px-2 pb-2">
+        <div className="px-2.5 pb-2.5">
           <Button
             type="text"
             icon={<PlusOutlined />}

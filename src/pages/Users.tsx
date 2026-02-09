@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { Table, Avatar, Input, Button, Modal, Form, message, Tag } from "antd";
+import { Table, Avatar, Input, Button, Modal, Form, Tag } from "antd";
 import { UserOutlined, EditOutlined, SearchOutlined } from "@ant-design/icons";
 import api from "@/services/api";
 import type { User } from "@/types";
+import { useMessage } from "@/hooks/useMessage";
 
 export default function Users() {
+  const message = useMessage();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -126,7 +128,7 @@ export default function Users() {
   ];
 
   return (
-    <div className="max-w-4xl">
+    <div>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h2 className="text-xl font-semibold text-[#e2e8f0] m-0">
@@ -165,7 +167,7 @@ export default function Users() {
         }}
         onOk={() => form.submit()}
         okText="Save"
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical" onFinish={handleSave}>
           <Form.Item label="Email">

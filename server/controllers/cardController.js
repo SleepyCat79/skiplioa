@@ -10,7 +10,6 @@ export async function getCards(req, res) {
     const cards = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     res.json(cards);
   } catch (err) {
-    console.error("getCards error:", err);
     res.status(500).json({ error: "Failed to fetch cards" });
   }
 }
@@ -21,7 +20,6 @@ export async function getCard(req, res) {
     if (!doc.exists) return res.status(404).json({ error: "Card not found" });
     res.json({ id: doc.id, ...doc.data() });
   } catch (err) {
-    console.error("getCard error:", err);
     res.status(500).json({ error: "Failed to fetch card" });
   }
 }
@@ -48,7 +46,6 @@ export async function createCard(req, res) {
     await cardRef.set(card);
     res.status(201).json(card);
   } catch (err) {
-    console.error("createCard error:", err);
     res.status(500).json({ error: "Failed to create card" });
   }
 }
@@ -68,7 +65,6 @@ export async function updateCard(req, res) {
     const updated = await ref.get();
     res.json({ id: updated.id, ...updated.data() });
   } catch (err) {
-    console.error("updateCard error:", err);
     res.status(500).json({ error: "Failed to update card" });
   }
 }
@@ -90,7 +86,6 @@ export async function deleteCard(req, res) {
 
     res.status(204).send();
   } catch (err) {
-    console.error("deleteCard error:", err);
     res.status(500).json({ error: "Failed to delete card" });
   }
 }
@@ -106,7 +101,6 @@ export async function getCardsByUser(req, res) {
     const cards = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     res.json(cards);
   } catch (err) {
-    console.error("getCardsByUser error:", err);
     res.status(500).json({ error: "Failed to fetch user cards" });
   }
 }

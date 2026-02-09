@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { Table, Avatar, Tag, Button, Input, message } from "antd";
-import { UserOutlined, SearchOutlined, MailOutlined } from "@ant-design/icons";
+import { Table, Avatar, Tag, Button, Input } from "antd";
+import { SearchOutlined, UserOutlined, MailOutlined } from "@ant-design/icons";
 import api from "@/services/api";
 import type { User } from "@/types";
+import { useMessage } from "@/hooks/useMessage";
 
 export default function TeamSettings() {
+  const message = useMessage();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");

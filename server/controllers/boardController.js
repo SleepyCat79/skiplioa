@@ -19,7 +19,6 @@ export async function createBoard(req, res) {
     await boardRef.set(board);
     res.status(201).json(board);
   } catch (err) {
-    console.error("createBoard error:", err);
     res.status(500).json({ error: "Failed to create board" });
   }
 }
@@ -34,7 +33,6 @@ export async function getBoards(req, res) {
     const boards = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     res.json(boards);
   } catch (err) {
-    console.error("getBoards error:", err);
     res.status(500).json({ error: "Failed to fetch boards" });
   }
 }
@@ -45,7 +43,6 @@ export async function getBoard(req, res) {
     if (!doc.exists) return res.status(404).json({ error: "Board not found" });
     res.json({ id: doc.id, ...doc.data() });
   } catch (err) {
-    console.error("getBoard error:", err);
     res.status(500).json({ error: "Failed to fetch board" });
   }
 }
@@ -66,7 +63,6 @@ export async function updateBoard(req, res) {
     const updated = await ref.get();
     res.json({ id: updated.id, ...updated.data() });
   } catch (err) {
-    console.error("updateBoard error:", err);
     res.status(500).json({ error: "Failed to update board" });
   }
 }
@@ -96,7 +92,6 @@ export async function deleteBoard(req, res) {
     await batch.commit();
     res.status(204).send();
   } catch (err) {
-    console.error("deleteBoard error:", err);
     res.status(500).json({ error: "Failed to delete board" });
   }
 }
@@ -142,13 +137,10 @@ export async function inviteMember(req, res) {
       const { sendInvitationEmail } =
         await import("../services/emailService.js");
       await sendInvitationEmail(emailMember, board.name, req.user.email);
-    } catch {
-      // email sending is optional
-    }
+    } catch {}
 
     res.json({ success: true });
   } catch (err) {
-    console.error("inviteMember error:", err);
     res.status(500).json({ error: "Failed to send invitation" });
   }
 }
@@ -184,7 +176,6 @@ export async function respondInvitation(req, res) {
 
     res.json({ success: true });
   } catch (err) {
-    console.error("respondInvitation error:", err);
     res.status(500).json({ error: "Failed to respond to invitation" });
   }
 }
@@ -216,7 +207,6 @@ export async function getInvitations(req, res) {
 
     res.json(Array.from(map.values()));
   } catch (err) {
-    console.error("getInvitations error:", err);
     res.status(500).json({ error: "Failed to fetch invitations" });
   }
 }

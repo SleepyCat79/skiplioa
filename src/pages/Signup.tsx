@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Form, Input, Button, message, Divider } from "antd";
+import { Form, Input, Button, Divider } from "antd";
 import {
   MailOutlined,
   LockOutlined,
@@ -8,11 +8,13 @@ import {
   FlagOutlined,
 } from "@ant-design/icons";
 import useAuthStore from "@/stores/authStore";
+import { useMessage } from "@/hooks/useMessage";
 
 const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID || "";
 
 export default function Signup() {
   const navigate = useNavigate();
+  const message = useMessage();
   const { sendCode, signup } = useAuthStore();
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
@@ -26,8 +28,10 @@ export default function Signup() {
       await sendCode(email);
       message.success("Verification code sent to your email");
       setStep("code");
-    } catch {
-      message.error("Failed to send verification code");
+    } catch (err: any) {
+      message.error(
+        err.response?.data?.message || "Failed to send verification code",
+      );
     } finally {
       setSending(false);
     }
@@ -39,8 +43,8 @@ export default function Signup() {
       await signup(email, values.code);
       message.success("Account created successfully");
       navigate("/");
-    } catch {
-      message.error("Invalid verification code");
+    } catch (err: any) {
+      message.error(err.response?.data?.message || "Account creation failed");
     } finally {
       setVerifying(false);
     }
