@@ -174,26 +174,30 @@ All screenshots are located in the `image/` folder.
 
 ### 1. Login/Signup Page
 
-![Login/Signup Page](image/login.png)
+![Login/Signup Page](image/auth%20screen.png)
 
-### 2. Dashboard with Boards
+### 2. Main Dashboard
 
-![Dashboard](image/dashboard.png)
+![Main Screen](image/main%20screen.png)
 
-### 3. Board Detail with Task Columns
+### 3. Project Overview
 
-![Board Detail](image/board-detail.png)
+![Project](image/project.png)
 
-### 4. Task Drawer with Details
+### 4. Create Task Modal
 
-![Task Drawer](image/task-drawer.png)
+![Create Task](image/create%20task%20.png)
 
-### 5. GitHub Integration Panel
+### 5. Task Details
 
-![GitHub Integration](image/github-panel.png)
+![Task](image/task.png)
 
-### 6. User Management Page
+### 6. Team Management
 
-![User Management](image/users.png)
+![Team Screen](image/team%20screen.png)
+
+### 7. Profile Settings
+
+![Profile Screen](image/profile%20screen.png)
 
 ---
